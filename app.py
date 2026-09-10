@@ -333,7 +333,7 @@ elif page == "🧮 Risk Calculator":
 
 # ================= PAGE 4: ABOUT PROJECT =================
 else:
-    st.title("ℹ️ About This Project")
+    st.title(" About This Project")
 
     st.markdown("""
 ### 🫀 Lifestyle Disease Risk Analysis

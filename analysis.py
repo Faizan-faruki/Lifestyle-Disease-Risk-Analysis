@@ -1,7 +1,6 @@
 import pandas as pd
 
-DATA_PATH = "data/cardio_train.csv"
-
+DATA_PATH = "Data/cardio_train.csv"
 def load_data():
     df = pd.read_csv(DATA_PATH, sep=";")
 

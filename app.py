@@ -266,7 +266,7 @@ elif page == "🧮 Risk Calculator":
     st.info(f"Calculated BMI: **{bmi}**")
 
     if st.button("Predict Risk", type="primary"):
-        model, scaler, accuracy = train_model()
+        model, scaler, metrics = train_model()
 
         input_dict = {
             "age_years": age,
@@ -328,7 +328,13 @@ elif page == "🧮 Risk Calculator":
         st.write("• Avoid tobacco and limit alcohol")
         st.write("• Get BP/glucose/cholesterol checked regularly")
 
-        st.caption(f"Model test accuracy: {round(accuracy*100, 1)}%")
+        st.caption(
+    f"Model performance — "
+    f"Accuracy: {round(metrics['accuracy']*100, 1)}% | "
+    f"Precision: {round(metrics['precision']*100, 1)}% | "
+    f"Recall: {round(metrics['recall']*100, 1)}% | "
+    f"ROC-AUC: {round(metrics['roc_auc'], 3)}"
+)
 
 
 # ================= PAGE 4: ABOUT PROJECT =================

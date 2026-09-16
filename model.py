@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 
 from analysis import load_data
 
@@ -28,15 +28,18 @@ def train_model():
     model = LogisticRegression(max_iter=1000)
     model.fit(X_train, y_train)
 
-    accuracy = model.score(X_test, y_test)
-
-    # Extra evaluation metrics (precision, recall, F1, ROC-AUC)
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
-    print(classification_report(y_test, y_pred))
-    print("ROC-AUC:", roc_auc_score(y_test, y_proba))
 
-    return model, scaler, accuracy
+    metrics = {
+        "accuracy": model.score(X_test, y_test),
+        "precision": precision_score(y_test, y_pred),
+        "recall": recall_score(y_test, y_pred),
+        "f1": f1_score(y_test, y_pred),
+        "roc_auc": roc_auc_score(y_test, y_proba),
+    }
+
+    return model, scaler, metrics
 
 
 def predict_risk(model, scaler, input_dict):
@@ -57,6 +60,10 @@ def predict_risk(model, scaler, input_dict):
 
 
 if __name__ == "__main__":
-    # Run this file directly to see the metrics printed in the terminal
-    trained_model, trained_scaler, acc = train_model()
-    print(f"\nAccuracy: {round(acc * 100, 1)}%")
+    # Run this file directly (python model.py) to see all metrics in the terminal
+    trained_model, trained_scaler, metrics = train_model()
+    print(f"Accuracy:  {round(metrics['accuracy'] * 100, 1)}%")
+    print(f"Precision: {round(metrics['precision'] * 100, 1)}%")
+    print(f"Recall:    {round(metrics['recall'] * 100, 1)}%")
+    print(f"F1-score:  {round(metrics['f1'] * 100, 1)}%")
+    print(f"ROC-AUC:   {round(metrics['roc_auc'], 3)}")

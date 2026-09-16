@@ -291,16 +291,6 @@ elif page == "🧮 Risk Calculator":
             unsafe_allow_html=True,
         )
 
-        fig = px.bar(
-            x=[prob], y=[""], orientation="h", range_x=[0, 100],
-            color=[category],
-            color_discrete_map={"LOW": "#4CAF50", "MODERATE": "#FF9800", "HIGH": "#E53935"},
-            template="plotly_dark",
-        )
-        fig.update_traces(texttemplate="%{x}%", textposition="inside")
-        fig.update_layout(height=120, showlegend=False, xaxis_title="Risk Probability (%)", yaxis_title="")
-        st.plotly_chart(fig, use_container_width=True)
-
         factors = []
         if bmi >= 25:
             factors.append("Higher BMI")
@@ -402,13 +392,14 @@ tool where explainability is important.
    - **33-66% → MODERATE risk**
    - **Above 66% → HIGH risk**
 
-**Model Accuracy:** The model typically achieves around **70–72% accuracy**
-on the test set (the exact number is shown live under the "Predict Risk"
-button in the calculator, since it's recalculated each time the app runs).
-This means the model correctly classifies roughly 7 out of every 10 patients
-in unseen data — a reasonable result for a simple model using real-world
-health data, where disease risk depends on many factors not captured here
-(like genetics, diet details, or medical history).
+### Model Performance
+
+To check how good the model actually is, four different scores are used:
+
+- **Accuracy (72.2%)** — Out of all predictions the model made, how many were correct overall.
+- **Precision (74.9%)** — When the model predicts that someone has the disease, how often is it actually right. A higher precision means fewer false alarms.
+- **Recall (65.7%)** — Out of all the people who actually have the disease, how many the model successfully identified. A higher recall means fewer missed cases.
+- **ROC-AUC (0.788)** — A single score (between 0 and 1) that shows how well the model can tell the difference between "disease" and "no disease" across all possible thresholds. 0.5 means random guessing; 0.788 means the model performs meaningfully better than chance.
 
 ### 🛠 Technologies Used
 

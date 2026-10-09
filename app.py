@@ -323,7 +323,7 @@ elif page == "🧮 Risk Calculator":
     f"Precision: {round(metrics['precision']*100, 1)}% | "
     f"Recall: {round(metrics['recall']*100, 1)}% | "
     f"ROC-AUC: {round(metrics['roc_auc'], 3)}"
-)      ye hai purana code or input eng me de
+)
 # ============================================================
 # 1) Put this helper function near the top of your app file
 #    (next to train_model / predict_risk)

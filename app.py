@@ -240,7 +240,90 @@ elif page == "📊 Dashboard":
     )
     st.plotly_chart(fig4, use_container_width=True)
 
+# ================= PAGE 3: RISK CALCULATOR =================
+elif page == "🧮 Risk Calculator":
+    st.title("🧮 Risk Calculator")
+    st.write("Enter your details to get an estimated cardiovascular disease risk.")
 
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.number_input("Age (years)", 18, 100, 40)
+        gender = st.selectbox("Gender", ["Female", "Male"])
+        height = st.number_input("Height (cm)", 100, 220, 170)
+        weight = st.number_input("Weight (kg)", 30, 200, 70)
+        ap_hi = st.number_input("Systolic BP", 80, 240, 120)
+        ap_lo = st.number_input("Diastolic BP", 50, 160, 80)
+
+    with col2:
+        cholesterol = st.selectbox("Cholesterol", ["Normal", "Above Normal", "Well Above Normal"])
+        gluc = st.selectbox("Glucose", ["Normal", "Above Normal", "Well Above Normal"])
+        smoke = st.selectbox("Smoking", ["No", "Yes"])
+        alco = st.selectbox("Alcohol Intake", ["No", "Yes"])
+        active = st.selectbox("Physically Active", ["Yes", "No"])
+
+    bmi = round(weight / ((height / 100) ** 2), 1)
+    st.info(f"Calculated BMI: **{bmi}**")
+
+    if st.button("Predict Risk", type="primary"):
+        model, scaler, metrics = train_model()
+
+        input_dict = {
+            "age_years": age,
+            "gender": 2 if gender == "Male" else 1,
+            "height": height,
+            "weight": weight,
+            "bmi": bmi,
+            "ap_hi": ap_hi,
+            "ap_lo": ap_lo,
+            "cholesterol": ["Normal", "Above Normal", "Well Above Normal"].index(cholesterol) + 1,
+            "gluc": ["Normal", "Above Normal", "Well Above Normal"].index(gluc) + 1,
+            "smoke": 1 if smoke == "Yes" else 0,
+            "alco": 1 if alco == "Yes" else 0,
+            "active": 1 if active == "Yes" else 0,
+        }
+
+        category, prob = predict_risk(model, scaler, input_dict)
+
+        color = {"LOW": "#4CAF50", "MODERATE": "#FF9800", "HIGH": "#E53935"}[category]
+        st.markdown(
+            f"<h2 style='color:{color};'>Estimated Risk: {category} ({prob}%)</h2>",
+            unsafe_allow_html=True,
+        )
+
+        factors = []
+        if bmi >= 25:
+            factors.append("Higher BMI")
+        if ap_hi >= 130 or ap_lo >= 85:
+            factors.append("Elevated Blood Pressure")
+        if smoke == "Yes":
+            factors.append("Smoking")
+        if active == "No":
+            factors.append("Low Physical Activity")
+        if cholesterol != "Normal":
+            factors.append("High Cholesterol")
+        if gluc != "Normal":
+            factors.append("High Glucose")
+
+        if factors:
+            st.write("**Main associated factors:**")
+            for f in factors:
+                st.write(f"• {f}")
+        else:
+            st.write("No major risk factors detected — keep it up!")
+
+        st.write("**Suggested awareness:**")
+        st.write("• Increase physical activity")
+        st.write("• Maintain a healthy weight")
+        st.write("• Avoid tobacco and limit alcohol")
+        st.write("• Get BP/glucose/cholesterol checked regularly")
+
+        st.caption(
+    f"Model performance — "
+    f"Accuracy: {round(metrics['accuracy']*100, 1)}% | "
+    f"Precision: {round(metrics['precision']*100, 1)}% | "
+    f"Recall: {round(metrics['recall']*100, 1)}% | "
+    f"ROC-AUC: {round(metrics['roc_auc'], 3)}"
+)      ye hai purana code or input eng me de
 # ============================================================
 # 1) Put this helper function near the top of your app file
 #    (next to train_model / predict_risk)

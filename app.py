@@ -241,6 +241,140 @@ elif page == "📊 Dashboard":
     st.plotly_chart(fig4, use_container_width=True)
 
 
+# ============================================================
+# 1) Put this helper function near the top of your app file
+#    (next to train_model / predict_risk)
+# ============================================================
+def get_personalized_suggestions(
+    age, gender, height, weight, bmi,
+    ap_hi, ap_lo, cholesterol, gluc,
+    smoke, alco, active, category,
+):
+    """Returns a list of personalised suggestions based on the user's inputs."""
+    tips = []
+
+    # ---------- Weight / BMI ----------
+    h_m = height / 100
+    healthy_min = round(18.5 * h_m ** 2, 1)
+    healthy_max = round(24.9 * h_m ** 2, 1)
+
+    if bmi >= 30:
+        to_lose = round(weight - healthy_max, 1)
+        tips.append(
+            f"Your BMI is {bmi} (obese range). A healthy weight for your height is "
+            f"{healthy_min}-{healthy_max} kg, so the long-term goal is to lose about {to_lose} kg. "
+            f"Start with a 5-7% loss (about {round(weight * 0.05, 1)}-{round(weight * 0.07, 1)} kg) "
+            f"over the next 3-6 months."
+        )
+    elif bmi >= 25:
+        to_lose = round(weight - healthy_max, 1)
+        tips.append(
+            f"Your BMI is {bmi} (overweight). Losing about {to_lose} kg would bring you into the "
+            f"healthy range ({healthy_min}-{healthy_max} kg). Cut back on sugary drinks and fried food "
+            f"and add daily walking."
+        )
+    elif bmi < 18.5:
+        to_gain = round(healthy_min - weight, 1)
+        tips.append(
+            f"Your BMI is {bmi} (underweight). Gaining about {to_gain} kg through a protein-rich, "
+            f"balanced diet would help. Consider speaking to a doctor or dietitian."
+        )
+    else:
+        tips.append(f"Your BMI of {bmi} is in the healthy range. Keep maintaining your weight.")
+
+    # ---------- Blood pressure ----------
+    if ap_hi >= 180 or ap_lo >= 120:
+        tips.append(
+            f"Your BP ({ap_hi}/{ap_lo}) is dangerously high. Please see a doctor as soon as possible."
+        )
+    elif ap_hi >= 140 or ap_lo >= 90:
+        tips.append(
+            f"Your BP ({ap_hi}/{ap_lo}) is in the high range (hypertension). Reduce salt to under 5 g/day, "
+            f"manage stress, and consult a doctor for proper evaluation."
+        )
+    elif ap_hi >= 130 or ap_lo >= 85:
+        tips.append(
+            f"Your BP ({ap_hi}/{ap_lo}) is elevated. Cut down on salt and processed food, "
+            f"and check your BP at least once a month."
+        )
+    elif ap_hi < 90 or ap_lo < 60:
+        tips.append(
+            f"Your BP ({ap_hi}/{ap_lo}) is on the low side. Stay hydrated and see a doctor "
+            f"if you feel dizzy or weak."
+        )
+
+    # ---------- Cholesterol ----------
+    if cholesterol == "Well Above Normal":
+        tips.append(
+            "Your cholesterol is well above normal. Avoid fried and fatty foods, add oats, nuts, "
+            "fruits and vegetables, and get a full lipid profile test with a doctor's advice."
+        )
+    elif cholesterol == "Above Normal":
+        tips.append(
+            "Your cholesterol is above normal. Reduce saturated fats (butter, ghee, fried snacks) "
+            "and include more fiber-rich foods."
+        )
+
+    # ---------- Glucose ----------
+    if gluc == "Well Above Normal":
+        tips.append(
+            "Your glucose is well above normal. Get an HbA1c / fasting sugar test done soon "
+            "and avoid sweets and refined carbs."
+        )
+    elif gluc == "Above Normal":
+        tips.append(
+            "Your glucose is above normal (pre-diabetic range possible). Limit sugar and white rice/bread, "
+            "and walk for 15 minutes after meals."
+        )
+
+    # ---------- Smoking ----------
+    if smoke == "Yes":
+        tips.append(
+            "Smoking greatly increases heart disease risk. Quitting is the single most effective change "
+            "you can make, and your risk starts dropping within a year. Ask a doctor about "
+            "nicotine replacement or counselling."
+        )
+
+    # ---------- Alcohol ----------
+    if alco == "Yes":
+        limit = "2 drinks/day" if gender == "Male" else "1 drink/day"
+        tips.append(
+            f"Limit alcohol to a maximum of {limit}, and have a few alcohol-free days every week."
+        )
+
+    # ---------- Physical activity ----------
+    if active == "No":
+        tips.append(
+            "You are not physically active. Start with 10-15 minutes of brisk walking daily and build up "
+            "to 150 minutes of moderate exercise per week."
+        )
+
+    # ---------- Age ----------
+    if age >= 55:
+        tips.append(
+            f"At {age}, get a full cardiac checkup (ECG, lipid profile, BP, sugar) at least once a year."
+        )
+    elif age >= 40:
+        tips.append(
+            f"At {age}, schedule a basic heart health checkup every 1-2 years."
+        )
+
+    # ---------- Nothing found ----------
+    if len(tips) == 1 and tips[0].startswith("Your BMI of") and category == "LOW":
+        tips.append("No major risk factors found. Keep up your healthy lifestyle and do yearly checkups.")
+
+    # ---------- Overall risk closing advice ----------
+    if category == "HIGH":
+        tips.append("Your overall estimated risk is HIGH. Please consult a doctor soon for a proper assessment.")
+    elif category == "MODERATE":
+        tips.append("Your overall estimated risk is MODERATE. Follow the steps above and recheck in 3-6 months.")
+
+    return tips
+
+
+# ============================================================
+# 2) Replace your whole Page 3 block with this
+# ============================================================
 # ================= PAGE 3: RISK CALCULATOR =================
 elif page == "🧮 Risk Calculator":
     st.title("🧮 Risk Calculator")
@@ -291,19 +425,22 @@ elif page == "🧮 Risk Calculator":
             unsafe_allow_html=True,
         )
 
+        # ---------- Main associated factors (now with actual values) ----------
         factors = []
         if bmi >= 25:
-            factors.append("Higher BMI")
+            factors.append(f"Higher BMI ({bmi})")
         if ap_hi >= 130 or ap_lo >= 85:
-            factors.append("Elevated Blood Pressure")
+            factors.append(f"Elevated Blood Pressure ({ap_hi}/{ap_lo})")
         if smoke == "Yes":
             factors.append("Smoking")
+        if alco == "Yes":
+            factors.append("Alcohol Intake")
         if active == "No":
             factors.append("Low Physical Activity")
         if cholesterol != "Normal":
-            factors.append("High Cholesterol")
+            factors.append(f"High Cholesterol ({cholesterol})")
         if gluc != "Normal":
-            factors.append("High Glucose")
+            factors.append(f"High Glucose ({gluc})")
 
         if factors:
             st.write("**Main associated factors:**")
@@ -312,19 +449,25 @@ elif page == "🧮 Risk Calculator":
         else:
             st.write("No major risk factors detected — keep it up!")
 
-        st.write("**Suggested awareness:**")
-        st.write("• Increase physical activity")
-        st.write("• Maintain a healthy weight")
-        st.write("• Avoid tobacco and limit alcohol")
-        st.write("• Get BP/glucose/cholesterol checked regularly")
+        # ---------- Personalised suggestions ----------
+        st.write("**Personalised suggestions for you:**")
+        suggestions = get_personalized_suggestions(
+            age=age, gender=gender, height=height, weight=weight, bmi=bmi,
+            ap_hi=ap_hi, ap_lo=ap_lo, cholesterol=cholesterol, gluc=gluc,
+            smoke=smoke, alco=alco, active=active, category=category,
+        )
+        for tip in suggestions:
+            st.write(f"• {tip}")
+
+        st.caption("This tool is for awareness only and is not a substitute for professional medical advice.")
 
         st.caption(
-    f"Model performance — "
-    f"Accuracy: {round(metrics['accuracy']*100, 1)}% | "
-    f"Precision: {round(metrics['precision']*100, 1)}% | "
-    f"Recall: {round(metrics['recall']*100, 1)}% | "
-    f"ROC-AUC: {round(metrics['roc_auc'], 3)}"
-)
+            f"Model performance — "
+            f"Accuracy: {round(metrics['accuracy']*100, 1)}% | "
+            f"Precision: {round(metrics['precision']*100, 1)}% | "
+            f"Recall: {round(metrics['recall']*100, 1)}% | "
+            f"ROC-AUC: {round(metrics['roc_auc'], 3)}"
+        )
 
 
 # ================= PAGE 4: ABOUT PROJECT =================
